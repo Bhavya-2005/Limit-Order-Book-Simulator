@@ -25,6 +25,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# GLOBAL STATE
+
 order_book = OrderBook()
 
 market_maker = MarketMaker()
@@ -43,6 +45,8 @@ cash_balance = 100000
 
 realized_pnl = 0
 
+
+# BROADCAST ENGINE
 
 async def broadcast_orderbook():
 
@@ -95,7 +99,8 @@ async def broadcast_orderbook():
         }
     }
 
-    # Redis disabled safely
+    # STORE TO REDIS
+
     try:
 
         store_orderbook(data)
@@ -105,6 +110,8 @@ async def broadcast_orderbook():
         print(
             f"Redis disabled: {e}"
         )
+
+    # WEBSOCKET BROADCAST
 
     disconnected_clients = []
 
@@ -129,6 +136,8 @@ async def broadcast_orderbook():
             clients.remove(client)
 
 
+# STARTUP
+
 @app.on_event("startup")
 async def startup_event():
 
@@ -147,6 +156,8 @@ async def startup_event():
     )
 
 
+# ROOT
+
 @app.get("/")
 def home():
 
@@ -156,6 +167,8 @@ def home():
             "LOB Simulator Running"
     }
 
+
+# WEBSOCKET
 
 @app.websocket("/ws")
 async def websocket_endpoint(
@@ -181,19 +194,30 @@ async def websocket_endpoint(
             )
 
 
-@app.get("/add_buy_order")
-async def add_buy_order(
-    price: float,
-    quantity: int
+# GENERIC ORDER CREATION
+
+async def create_order(
+
+    side: str,
+
+    quantity: int,
+
+    price: float = 0,
+
+    order_type: str = "limit"
 ):
 
     global current_order_id
+
+    # CREATE ORDER
 
     order = Order(
 
         id=current_order_id,
 
-        side="buy",
+        side=side,
+
+        order_type=order_type,
 
         price=price,
 
@@ -202,7 +226,39 @@ async def add_buy_order(
 
     current_order_id += 1
 
+    # MARKET ORDER LOGIC
+
+    if order_type == "market":
+
+        if side == "buy":
+
+            best_ask = (
+                order_book.get_best_ask()
+            )
+
+            if best_ask:
+
+                order.price = (
+                    best_ask.price
+                )
+
+        elif side == "sell":
+
+            best_bid = (
+                order_book.get_best_bid()
+            )
+
+            if best_bid:
+
+                order.price = (
+                    best_bid.price
+                )
+
+    # ADD TO ORDER BOOK
+
     order_book.add_order(order)
+
+    # MATCH ENGINE
 
     trades = await match_orders(
         order_book
@@ -212,12 +268,14 @@ async def add_buy_order(
         trades
     )
 
+    # BROADCAST
+
     await broadcast_orderbook()
 
     return {
 
         "status":
-            "Buy order added",
+            f"{side.upper()} {order_type.upper()} order added",
 
         "order":
             order.__dict__,
@@ -226,6 +284,28 @@ async def add_buy_order(
             trades
     }
 
+
+# LIMIT BUY
+
+@app.get("/add_buy_order")
+async def add_buy_order(
+    price: float,
+    quantity: int
+):
+
+    return await create_order(
+
+        side="buy",
+
+        quantity=quantity,
+
+        price=price,
+
+        order_type="limit"
+    )
+
+
+# LIMIT SELL
 
 @app.get("/add_sell_order")
 async def add_sell_order(
@@ -233,45 +313,53 @@ async def add_sell_order(
     quantity: int
 ):
 
-    global current_order_id
-
-    order = Order(
-
-        id=current_order_id,
+    return await create_order(
 
         side="sell",
 
+        quantity=quantity,
+
         price=price,
 
-        quantity=quantity
+        order_type="limit"
     )
 
-    current_order_id += 1
 
-    order_book.add_order(order)
+# MARKET BUY
 
-    trades = await match_orders(
-        order_book
+@app.get("/market_buy")
+async def market_buy(
+    quantity: int
+):
+
+    return await create_order(
+
+        side="buy",
+
+        quantity=quantity,
+
+        order_type="market"
     )
 
-    trade_history.extend(
-        trades
+
+# MARKET SELL
+
+@app.get("/market_sell")
+async def market_sell(
+    quantity: int
+):
+
+    return await create_order(
+
+        side="sell",
+
+        quantity=quantity,
+
+        order_type="market"
     )
 
-    await broadcast_orderbook()
 
-    return {
-
-        "status":
-            "Sell order added",
-
-        "order":
-            order.__dict__,
-
-        "trades":
-            trades
-    }
-
+# CANCEL ORDER
 
 @app.get("/cancel_order")
 async def cancel_order(
@@ -290,6 +378,8 @@ async def cancel_order(
             f"Order {order_id} cancelled"
     }
 
+
+# GET ORDERBOOK
 
 @app.get("/orderbook")
 def get_orderbook():
