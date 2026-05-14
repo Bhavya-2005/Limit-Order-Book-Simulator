@@ -95,7 +95,7 @@ async def broadcast_orderbook():
         }
     }
 
-    # Optional Redis storage
+    # Redis disabled safely
     try:
 
         store_orderbook(data)
