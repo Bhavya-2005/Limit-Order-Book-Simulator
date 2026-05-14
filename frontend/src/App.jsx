@@ -10,8 +10,10 @@ import DepthChart from "./components/DepthChart";
 import CandlestickChart from "./components/CandlestickChart";
 import RiskPanel from "./components/RiskPanel";
 import ExecutionPanel from "./components/ExecutionPanel";
+import TickerBar from "./components/TickerBar";
 
 function App() {
+
     const [bids, setBids] = useState([]);
     const [asks, setAsks] = useState([]);
     const [trades, setTrades] = useState([]);
@@ -29,7 +31,9 @@ function App() {
         "https://lob-backend.onrender.com";
 
     const fetchOrderBook = async () => {
+
         try {
+
             const response =
                 await axios.get(
                     `${BACKEND_URL}/orderbook`
@@ -40,6 +44,7 @@ function App() {
             setTrades(response.data.trades || []);
 
         } catch (error) {
+
             console.error(
                 "Error fetching orderbook:",
                 error
@@ -56,7 +61,10 @@ function App() {
         );
 
         socket.onopen = () => {
-            console.log("WebSocket connected");
+
+            console.log(
+                "WebSocket connected"
+            );
         };
 
         socket.onmessage = (event) => {
@@ -91,7 +99,9 @@ function App() {
                     setChartData(prev => {
 
                         const lastCandle =
-                            prev[prev.length - 1];
+                            prev[
+                                prev.length - 1
+                            ];
 
                         if (!lastCandle) {
 
@@ -169,6 +179,7 @@ function App() {
         };
 
         socket.onerror = (error) => {
+
             console.error(
                 "WebSocket error:",
                 error
@@ -176,6 +187,7 @@ function App() {
         };
 
         socket.onclose = () => {
+
             console.log(
                 "WebSocket disconnected"
             );
@@ -216,66 +228,123 @@ function App() {
             >
 
                 <div>
-                    <h1 className="text-4xl font-bold text-cyan-400">
+
+                    <h1 className="
+                        text-4xl
+                        font-bold
+                        text-cyan-400
+                    ">
                         LOB/USD
                     </h1>
 
-                    <p className="text-slate-400 mt-1">
+                    <p className="
+                        text-slate-400
+                        mt-1
+                    ">
                         Professional Market Simulator
                     </p>
+
                 </div>
 
-                <div className="flex flex-wrap gap-6">
+                <div className="
+                    flex
+                    flex-wrap
+                    gap-6
+                ">
 
                     <div>
-                        <p className="text-slate-400 text-sm">
+
+                        <p className="
+                            text-slate-400
+                            text-sm
+                        ">
                             Market Price
                         </p>
 
-                        <p className="text-green-400 text-2xl font-bold">
+                        <p className="
+                            text-green-400
+                            text-2xl
+                            font-bold
+                        ">
                             107.28
                         </p>
+
                     </div>
 
                     <div>
-                        <p className="text-slate-400 text-sm">
+
+                        <p className="
+                            text-slate-400
+                            text-sm
+                        ">
                             Spread
                         </p>
 
-                        <p className="text-cyan-400 text-2xl font-bold">
+                        <p className="
+                            text-cyan-400
+                            text-2xl
+                            font-bold
+                        ">
                             0.02
                         </p>
+
                     </div>
 
                     <div>
-                        <p className="text-slate-400 text-sm">
+
+                        <p className="
+                            text-slate-400
+                            text-sm
+                        ">
                             Volume
                         </p>
 
-                        <p className="text-yellow-400 text-2xl font-bold">
+                        <p className="
+                            text-yellow-400
+                            text-2xl
+                            font-bold
+                        ">
                             14,281
                         </p>
+
                     </div>
 
                     <div>
-                        <p className="text-slate-400 text-sm">
+
+                        <p className="
+                            text-slate-400
+                            text-sm
+                        ">
                             WebSocket
                         </p>
 
-                        <p className="text-green-400 font-bold">
+                        <p className="
+                            text-green-400
+                            font-bold
+                        ">
                             ● Connected
                         </p>
+
                     </div>
 
                 </div>
 
             </motion.div>
 
+            {/* TICKER BAR */}
+
+            <TickerBar />
+
             {/* MAIN GRID */}
 
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+            <div className="
+                grid
+                grid-cols-1
+                xl:grid-cols-12
+                gap-5
+            ">
 
-                {/* LEFT PANEL */}
+                {/* TRADE PANEL */}
 
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
@@ -292,7 +361,13 @@ function App() {
                         shadow-[0_0_30px_rgba(0,255,255,0.05)]
                     "
                 >
-                    <TradePanel refreshOrderBook={fetchOrderBook} />
+
+                    <TradePanel
+                        refreshOrderBook={
+                            fetchOrderBook
+                        }
+                    />
+
                 </motion.div>
 
                 {/* ORDER BOOK */}
@@ -312,7 +387,12 @@ function App() {
                         shadow-[0_0_30px_rgba(0,255,255,0.05)]
                     "
                 >
-                    <OrderBook bids={bids} asks={asks} />
+
+                    <OrderBook
+                        bids={bids}
+                        asks={asks}
+                    />
+
                 </motion.div>
 
                 {/* CHART */}
@@ -334,7 +414,11 @@ function App() {
                 >
 
                     <div className="h-[500px]">
-                        <CandlestickChart chartData={chartData} />
+
+                        <CandlestickChart
+                            chartData={chartData}
+                        />
+
                     </div>
 
                 </motion.div>
@@ -358,7 +442,11 @@ function App() {
                         border
                         border-cyan-500/10
                     ">
-                        <Trades trades={trades} />
+
+                        <Trades
+                            trades={trades}
+                        />
+
                     </div>
 
                     <div className="
@@ -369,11 +457,13 @@ function App() {
                         border
                         border-cyan-500/10
                     ">
+
                         <StatsPanel
                             bids={bids}
                             asks={asks}
                             trades={trades}
                         />
+
                     </div>
 
                     <div className="
@@ -384,7 +474,11 @@ function App() {
                         border
                         border-cyan-500/10
                     ">
-                        <RiskPanel risk={risk} />
+
+                        <RiskPanel
+                            risk={risk}
+                        />
+
                     </div>
 
                     <div className="
@@ -395,7 +489,11 @@ function App() {
                         border
                         border-cyan-500/10
                     ">
-                        <ExecutionPanel trades={trades} />
+
+                        <ExecutionPanel
+                            trades={trades}
+                        />
+
                     </div>
 
                 </div>
@@ -417,7 +515,12 @@ function App() {
                         shadow-[0_0_30px_rgba(0,255,255,0.05)]
                     "
                 >
-                    <DepthChart bids={bids} asks={asks} />
+
+                    <DepthChart
+                        bids={bids}
+                        asks={asks}
+                    />
+
                 </motion.div>
 
             </div>

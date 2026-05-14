@@ -46,3 +46,16 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #38bdf8;
 }
+
+/* TICKER ANIMATION */
+
+@keyframes ticker {
+
+    0% {
+        transform: translateX(0%);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
