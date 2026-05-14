@@ -3,9 +3,11 @@ import React, {
 } from "react";
 
 import axios from "axios";
+
 import {
     ArrowUpRight,
-    ArrowDownRight
+    ArrowDownRight,
+    Layers3
 } from "lucide-react";
 
 function TradePanel({
@@ -15,10 +17,16 @@ function TradePanel({
     const [side, setSide] =
         useState("BUY");
 
+    const [orderType, setOrderType] =
+        useState("LIMIT");
+
     const [price, setPrice] =
         useState("");
 
     const [quantity, setQuantity] =
+        useState("");
+
+    const [cancelOrderId, setCancelOrderId] =
         useState("");
 
     const [loading, setLoading] =
@@ -27,27 +35,78 @@ function TradePanel({
     const BACKEND_URL =
         "https://lob-backend.onrender.com";
 
+    // SUBMIT ORDER
+
     const submitOrder =
         async () => {
 
-            if (!price || !quantity)
+            if (!quantity)
                 return;
 
             try {
 
                 setLoading(true);
 
-                await axios.post(
-                    `${BACKEND_URL}/order`,
-                    {
-                        side,
-                        price:
-                            parseFloat(price),
+                // LIMIT ORDERS
 
-                        quantity:
-                            parseInt(quantity)
-                    }
-                );
+                if (orderType === "LIMIT") {
+
+                    if (!price)
+                        return;
+
+                    const endpoint =
+
+                        side === "BUY"
+
+                            ? "/add_buy_order"
+
+                            : "/add_sell_order";
+
+                    await axios.get(
+
+                        `${BACKEND_URL}${endpoint}`,
+
+                        {
+                            params: {
+
+                                price:
+                                    parseFloat(price),
+
+                                quantity:
+                                    parseInt(quantity)
+                            }
+                        }
+                    );
+
+                }
+
+                // MARKET ORDERS
+
+                else {
+
+                    const endpoint =
+
+                        side === "BUY"
+
+                            ? "/market_buy"
+
+                            : "/market_sell";
+
+                    await axios.get(
+
+                        `${BACKEND_URL}${endpoint}`,
+
+                        {
+                            params: {
+
+                                quantity:
+                                    parseInt(quantity)
+                            }
+                        }
+                    );
+                }
+
+                // RESET
 
                 setPrice("");
                 setQuantity("");
@@ -64,6 +123,44 @@ function TradePanel({
             } finally {
 
                 setLoading(false);
+            }
+        };
+
+    // CANCEL ORDER
+
+    const cancelOrder =
+        async () => {
+
+            if (!cancelOrderId)
+                return;
+
+            try {
+
+                await axios.get(
+
+                    `${BACKEND_URL}/cancel_order`,
+
+                    {
+                        params: {
+
+                            order_id:
+                                parseInt(
+                                    cancelOrderId
+                                )
+                        }
+                    }
+                );
+
+                setCancelOrderId("");
+
+                refreshOrderBook();
+
+            } catch (error) {
+
+                console.error(
+                    "Cancel Error:",
+                    error
+                );
             }
         };
 
@@ -87,18 +184,18 @@ function TradePanel({
                     text-slate-400
                     text-sm
                 ">
-                    Execute Market Orders
+                    Professional Exchange Terminal
                 </p>
 
             </div>
 
-            {/* BUY / SELL TOGGLE */}
+            {/* BUY / SELL */}
 
             <div className="
                 grid
                 grid-cols-2
                 gap-3
-                mb-5
+                mb-4
             ">
 
                 <button
@@ -175,6 +272,71 @@ function TradePanel({
 
             </div>
 
+            {/* ORDER TYPE */}
+
+            <div className="
+                grid
+                grid-cols-2
+                gap-3
+                mb-5
+            ">
+
+                <button
+                    onClick={() =>
+                        setOrderType(
+                            "LIMIT"
+                        )
+                    }
+                    className={`
+                        py-2
+                        rounded-xl
+                        font-semibold
+                        transition-all
+                        ${
+                            orderType === "LIMIT"
+                                ? `
+                                    bg-cyan-500
+                                    text-white
+                                  `
+                                : `
+                                    bg-slate-800
+                                    text-slate-400
+                                  `
+                        }
+                    `}
+                >
+                    LIMIT
+                </button>
+
+                <button
+                    onClick={() =>
+                        setOrderType(
+                            "MARKET"
+                        )
+                    }
+                    className={`
+                        py-2
+                        rounded-xl
+                        font-semibold
+                        transition-all
+                        ${
+                            orderType === "MARKET"
+                                ? `
+                                    bg-yellow-500
+                                    text-black
+                                  `
+                                : `
+                                    bg-slate-800
+                                    text-slate-400
+                                  `
+                        }
+                    `}
+                >
+                    MARKET
+                </button>
+
+            </div>
+
             {/* INPUTS */}
 
             <div className="
@@ -185,42 +347,44 @@ function TradePanel({
 
                 {/* PRICE */}
 
-                <div>
+                {orderType === "LIMIT" && (
 
-                    <label className="
-                        text-sm
-                        text-slate-400
-                        mb-2
-                        block
-                    ">
-                        Price
-                    </label>
+                    <div>
 
-                    <input
-                        type="number"
-                        value={price}
-                        onChange={(e) =>
-                            setPrice(
-                                e.target.value
-                            )
-                        }
-                        placeholder="Enter Price"
-                        className="
-                            w-full
-                            bg-slate-800
-                            border
-                            border-slate-700
-                            rounded-xl
-                            px-4
-                            py-3
-                            text-white
-                            outline-none
-                            focus:border-cyan-400
-                            transition-all
-                        "
-                    />
+                        <label className="
+                            text-sm
+                            text-slate-400
+                            mb-2
+                            block
+                        ">
+                            Price
+                        </label>
 
-                </div>
+                        <input
+                            type="number"
+                            value={price}
+                            onChange={(e) =>
+                                setPrice(
+                                    e.target.value
+                                )
+                            }
+                            placeholder="Enter Price"
+                            className="
+                                w-full
+                                bg-slate-800
+                                border
+                                border-slate-700
+                                rounded-xl
+                                px-4
+                                py-3
+                                text-white
+                                outline-none
+                                focus:border-cyan-400
+                            "
+                        />
+
+                    </div>
+                )}
 
                 {/* QUANTITY */}
 
@@ -255,7 +419,6 @@ function TradePanel({
                             text-white
                             outline-none
                             focus:border-cyan-400
-                            transition-all
                         "
                     />
 
@@ -328,11 +491,92 @@ function TradePanel({
                 >
 
                     {loading
+
                         ? "Processing..."
-                        : `${side} ORDER`
+
+                        : `${side} ${orderType}`
                     }
 
                 </button>
+
+            </div>
+
+            {/* CANCEL ORDER */}
+
+            <div className="
+                mt-6
+                pt-6
+                border-t
+                border-slate-800
+            ">
+
+                <div className="
+                    flex
+                    items-center
+                    gap-2
+                    mb-3
+                ">
+
+                    <Layers3
+                        size={18}
+                        className="
+                            text-yellow-400
+                        "
+                    />
+
+                    <h3 className="
+                        font-semibold
+                        text-yellow-400
+                    ">
+                        Cancel Order
+                    </h3>
+
+                </div>
+
+                <div className="
+                    flex
+                    gap-2
+                ">
+
+                    <input
+                        type="number"
+                        value={cancelOrderId}
+                        onChange={(e) =>
+                            setCancelOrderId(
+                                e.target.value
+                            )
+                        }
+                        placeholder="Order ID"
+                        className="
+                            flex-1
+                            bg-slate-800
+                            border
+                            border-slate-700
+                            rounded-xl
+                            px-4
+                            py-3
+                            text-white
+                            outline-none
+                            focus:border-yellow-400
+                        "
+                    />
+
+                    <button
+                        onClick={cancelOrder}
+                        className="
+                            px-4
+                            rounded-xl
+                            bg-yellow-500
+                            text-black
+                            font-bold
+                            hover:bg-yellow-400
+                            transition-all
+                        "
+                    >
+                        Cancel
+                    </button>
+
+                </div>
 
             </div>
 
@@ -348,7 +592,7 @@ function TradePanel({
             ">
 
                 <span>
-                    Exchange Mode
+                    Exchange Engine
                 </span>
 
                 <span className="
