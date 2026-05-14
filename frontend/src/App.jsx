@@ -22,28 +22,36 @@ function App() {
     const [chartData, setChartData] = useState([]);
 
     const [risk, setRisk] = useState({
-
         inventory: 0,
-
         cash: 0,
-
         realized_pnl: 0,
-
         unrealized_pnl: 0,
-
         inventory_risk: 0
     });
 
+    const BACKEND_URL =
+        "https://lob-backend.onrender.com";
+
     const fetchOrderBook = async () => {
 
-        const response =
-            await axios.get(
-                "https://lob-backend.onrender.com"
-            );
+        try {
 
-        setBids(response.data.bids);
-        setAsks(response.data.asks);
-        setTrades(response.data.trades);
+            const response =
+                await axios.get(
+                    `${BACKEND_URL}/orderbook`
+                );
+
+            setBids(response.data.bids || []);
+            setAsks(response.data.asks || []);
+            setTrades(response.data.trades || []);
+
+        } catch (error) {
+
+            console.error(
+                "Error fetching orderbook:",
+                error
+            );
+        }
     };
 
     useEffect(() => {
@@ -51,108 +59,142 @@ function App() {
         fetchOrderBook();
 
         const socket = new WebSocket(
-            "wss://lob-backend.onrender.com/ws"
+            `wss://lob-backend.onrender.com/ws`
         );
+
+        socket.onopen = () => {
+
+            console.log(
+                "WebSocket connected"
+            );
+        };
 
         socket.onmessage = (event) => {
 
-            const data =
-                JSON.parse(event.data);
+            try {
 
-            setBids(data.bids);
+                const data =
+                    JSON.parse(event.data);
 
-            setAsks(data.asks);
+                setBids(data.bids || []);
 
-            setTrades(data.trades || []);
+                setAsks(data.asks || []);
 
-            setRisk(data.risk);
+                setTrades(data.trades || []);
 
-            if (data.trades.length > 0) {
-
-                const latestTrade =
-                    data.trades[
-                        data.trades.length - 1
-                    ];
-
-                setChartData(prev => {
-
-                    const lastCandle =
-                        prev[
-                            prev.length - 1
-                        ];
-
-                    if (!lastCandle) {
-
-                        return [
-
-                            {
-                                open:
-                                    latestTrade.price,
-
-                                high:
-                                    latestTrade.price,
-
-                                low:
-                                    latestTrade.price,
-
-                                close:
-                                    latestTrade.price
-                            }
-
-                        ];
-                    }
-
-                    const updatedCandle = {
-
-                        ...lastCandle,
-
-                        high: Math.max(
-                            lastCandle.high,
-                            latestTrade.price
-                        ),
-
-                        low: Math.min(
-                            lastCandle.low,
-                            latestTrade.price
-                        ),
-
-                        close:
-                            latestTrade.price
-                    };
-
-                    if (
-                        data.trades.length % 5 === 0
-                    ) {
-
-                        return [
-
-                            ...prev,
-
-                            {
-                                open:
-                                    latestTrade.price,
-
-                                high:
-                                    latestTrade.price,
-
-                                low:
-                                    latestTrade.price,
-
-                                close:
-                                    latestTrade.price
-                            }
-
-                        ];
-                    }
-
-                    return [
-
-                        ...prev.slice(0, -1),
-
-                        updatedCandle
-                    ];
+                setRisk(data.risk || {
+                    inventory: 0,
+                    cash: 0,
+                    realized_pnl: 0,
+                    unrealized_pnl: 0,
+                    inventory_risk: 0
                 });
+
+                if (
+                    data.trades &&
+                    data.trades.length > 0
+                ) {
+
+                    const latestTrade =
+                        data.trades[
+                            data.trades.length - 1
+                        ];
+
+                    setChartData(prev => {
+
+                        const lastCandle =
+                            prev[
+                                prev.length - 1
+                            ];
+
+                        if (!lastCandle) {
+
+                            return [
+                                {
+                                    open:
+                                        latestTrade.price,
+
+                                    high:
+                                        latestTrade.price,
+
+                                    low:
+                                        latestTrade.price,
+
+                                    close:
+                                        latestTrade.price
+                                }
+                            ];
+                        }
+
+                        const updatedCandle = {
+
+                            ...lastCandle,
+
+                            high: Math.max(
+                                lastCandle.high,
+                                latestTrade.price
+                            ),
+
+                            low: Math.min(
+                                lastCandle.low,
+                                latestTrade.price
+                            ),
+
+                            close:
+                                latestTrade.price
+                        };
+
+                        if (
+                            data.trades.length % 5 === 0
+                        ) {
+
+                            return [
+                                ...prev,
+                                {
+                                    open:
+                                        latestTrade.price,
+
+                                    high:
+                                        latestTrade.price,
+
+                                    low:
+                                        latestTrade.price,
+
+                                    close:
+                                        latestTrade.price
+                                }
+                            ];
+                        }
+
+                        return [
+                            ...prev.slice(0, -1),
+                            updatedCandle
+                        ];
+                    });
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "WebSocket message error:",
+                    error
+                );
             }
+        };
+
+        socket.onerror = (error) => {
+
+            console.error(
+                "WebSocket error:",
+                error
+            );
+        };
+
+        socket.onclose = () => {
+
+            console.log(
+                "WebSocket disconnected"
+            );
         };
 
         return () => socket.close();
