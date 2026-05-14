@@ -1,80 +1,244 @@
-import React from "react";
+import React, {
+    useEffect,
+    useRef
+} from "react";
 
-function CandlestickChart({
-    chartData
-}) {
+import {
+    createChart
+} from "lightweight-charts";
+
+function CandlestickChart({ chartData }) {
+
+    const chartContainerRef =
+        useRef();
+
+    const chartRef =
+        useRef(null);
+
+    const candleSeriesRef =
+        useRef(null);
+
+    useEffect(() => {
+
+        const chart =
+            createChart(
+                chartContainerRef.current,
+                {
+                    width:
+                        chartContainerRef.current
+                            .clientWidth,
+
+                    height: 500,
+
+                    layout: {
+                        background: {
+                            color: "#020617"
+                        },
+
+                        textColor: "#CBD5E1"
+                    },
+
+                    grid: {
+                        vertLines: {
+                            color:
+                                "rgba(255,255,255,0.05)"
+                        },
+
+                        horzLines: {
+                            color:
+                                "rgba(255,255,255,0.05)"
+                        }
+                    },
+
+                    crosshair: {
+                        mode: 1
+                    },
+
+                    rightPriceScale: {
+                        borderColor:
+                            "rgba(255,255,255,0.1)"
+                    },
+
+                    timeScale: {
+                        borderColor:
+                            "rgba(255,255,255,0.1)",
+
+                        timeVisible: true,
+
+                        secondsVisible: true
+                    }
+                }
+            );
+
+        const candleSeries =
+            chart.addCandlestickSeries({
+
+                upColor: "#22c55e",
+
+                downColor: "#ef4444",
+
+                borderVisible: false,
+
+                wickUpColor: "#22c55e",
+
+                wickDownColor: "#ef4444"
+            });
+
+        chartRef.current = chart;
+
+        candleSeriesRef.current =
+            candleSeries;
+
+        const handleResize = () => {
+
+            chart.applyOptions({
+                width:
+                    chartContainerRef.current
+                        .clientWidth
+            });
+        };
+
+        window.addEventListener(
+            "resize",
+            handleResize
+        );
+
+        return () => {
+
+            window.removeEventListener(
+                "resize",
+                handleResize
+            );
+
+            chart.remove();
+        };
+
+    }, []);
+
+    useEffect(() => {
+
+        if (
+            !candleSeriesRef.current ||
+            !chartData.length
+        ) return;
+
+        const formattedData =
+            chartData.map(
+                (candle, index) => ({
+                    time:
+                        Math.floor(
+                            Date.now() / 1000
+                        ) + index,
+
+                    open:
+                        candle.open,
+
+                    high:
+                        candle.high,
+
+                    low:
+                        candle.low,
+
+                    close:
+                        candle.close
+                })
+            );
+
+        candleSeriesRef.current.setData(
+            formattedData
+        );
+
+    }, [chartData]);
 
     return (
 
-        <div>
+        <div className="h-full w-full">
 
-            <h2 className="text-2xl font-bold mb-6 text-cyan-400">
-                OHLC Candlestick Chart
-            </h2>
+            {/* HEADER */}
 
-            <div className="flex items-end gap-2 h-80 overflow-x-auto">
+            <div className="
+                flex
+                items-center
+                justify-between
+                mb-4
+            ">
 
-                {
-                    chartData.map(
-                        (candle, index) => {
+                <div>
 
-                            const isBullish =
-                                candle.close >= candle.open;
+                    <h2 className="
+                        text-2xl
+                        font-bold
+                        text-cyan-400
+                    ">
+                        Market Chart
+                    </h2>
 
-                            const bodyHeight =
-                                Math.abs(
-                                    candle.close
-                                    -
-                                    candle.open
-                                ) * 8;
+                    <p className="
+                        text-slate-400
+                        text-sm
+                    ">
+                        Live Candlestick Price Action
+                    </p>
 
-                            const wickHeight =
-                                (
-                                    candle.high
-                                    -
-                                    candle.low
-                                ) * 8;
+                </div>
 
-                            return (
+                {/* TIMEFRAMES */}
 
-                                <div
-                                    key={index}
-                                    className="flex flex-col items-center"
-                                >
+                <div className="
+                    flex
+                    gap-2
+                ">
 
-                                    {/* HIGH */}
-                                    <div
-                                        className="w-[2px] bg-white"
-                                        style={{
-                                            height: wickHeight
-                                        }}
-                                    />
+                    <button className="
+                        px-3
+                        py-1
+                        rounded-lg
+                        bg-cyan-500/20
+                        text-cyan-400
+                        text-sm
+                        border
+                        border-cyan-500/20
+                    ">
+                        1S
+                    </button>
 
-                                    {/* BODY */}
-                                    <div
-                                        className={
-                                            isBullish
-                                                ? "bg-green-500 w-6"
-                                                : "bg-red-500 w-6"
-                                        }
-                                        style={{
-                                            height:
-                                                bodyHeight || 4
-                                        }}
-                                    />
+                    <button className="
+                        px-3
+                        py-1
+                        rounded-lg
+                        bg-slate-800
+                        text-slate-300
+                        text-sm
+                    ">
+                        5S
+                    </button>
 
-                                    <span className="text-xs mt-2">
-                                        {index + 1}
-                                    </span>
+                    <button className="
+                        px-3
+                        py-1
+                        rounded-lg
+                        bg-slate-800
+                        text-slate-300
+                        text-sm
+                    ">
+                        1M
+                    </button>
 
-                                </div>
-
-                            );
-                        }
-                    )
-                }
+                </div>
 
             </div>
+
+            {/* CHART */}
+
+            <div
+                ref={chartContainerRef}
+                className="
+                    w-full
+                    h-[430px]
+                    rounded-xl
+                    overflow-hidden
+                "
+            />
 
         </div>
     );
