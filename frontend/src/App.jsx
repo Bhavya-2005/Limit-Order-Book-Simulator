@@ -12,6 +12,7 @@ import RiskPanel from "./components/RiskPanel";
 import ExecutionPanel from "./components/ExecutionPanel";
 import TickerBar from "./components/TickerBar";
 import SystemMetrics from "./components/SystemMetrics";
+import ActivityFeed from "./components/ActivityFeed";
 
 function App() {
 
@@ -503,30 +504,62 @@ function App() {
 
                 </div>
 
-                {/* DEPTH CHART */}
+                {/* DEPTH + ACTIVITY */}
 
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.6 }}
-                    className="
-                        xl:col-span-12
-                        bg-slate-900/70
-                        backdrop-blur-xl
-                        p-5
-                        rounded-2xl
-                        border
-                        border-cyan-500/10
-                        shadow-[0_0_30px_rgba(0,255,255,0.05)]
-                    "
-                >
+                <div className="
+                    xl:col-span-12
+                    grid
+                    grid-cols-1
+                    xl:grid-cols-3
+                    gap-5
+                ">
 
-                    <DepthChart
-                        bids={bids}
-                        asks={asks}
-                    />
+                    {/* DEPTH CHART */}
 
-                </motion.div>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.6 }}
+                        className="
+                            xl:col-span-2
+                            bg-slate-900/70
+                            backdrop-blur-xl
+                            p-5
+                            rounded-2xl
+                            border
+                            border-cyan-500/10
+                            shadow-[0_0_30px_rgba(0,255,255,0.05)]
+                        "
+                    >
+
+                        <DepthChart
+                            bids={bids}
+                            asks={asks}
+                        />
+
+                    </motion.div>
+
+                    {/* ACTIVITY FEED */}
+
+                    <motion.div
+                        initial={{
+                            opacity: 0,
+                            x: 20
+                        }}
+                        animate={{
+                            opacity: 1,
+                            x: 0
+                        }}
+                        transition={{
+                            duration: 0.6
+                        }}
+                    >
+
+                        <ActivityFeed />
+
+                    </motion.div>
+
+                </div>
 
             </div>
 
