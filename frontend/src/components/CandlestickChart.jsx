@@ -4,13 +4,14 @@ import React, {
 } from "react";
 
 import {
-    createChart
+    createChart,
+    CandlestickSeries
 } from "lightweight-charts";
 
 function CandlestickChart({ chartData }) {
 
     const chartContainerRef =
-        useRef();
+        useRef(null);
 
     const chartRef =
         useRef(null);
@@ -19,6 +20,8 @@ function CandlestickChart({ chartData }) {
         useRef(null);
 
     useEffect(() => {
+
+        if (!chartContainerRef.current) return;
 
         const chart =
             createChart(
@@ -50,10 +53,6 @@ function CandlestickChart({ chartData }) {
                         }
                     },
 
-                    crosshair: {
-                        mode: 1
-                    },
-
                     rightPriceScale: {
                         borderColor:
                             "rgba(255,255,255,0.1)"
@@ -71,18 +70,20 @@ function CandlestickChart({ chartData }) {
             );
 
         const candleSeries =
-            chart.addCandlestickSeries({
+            chart.addSeries(
+                CandlestickSeries,
+                {
+                    upColor: "#22c55e",
 
-                upColor: "#22c55e",
+                    downColor: "#ef4444",
 
-                downColor: "#ef4444",
+                    borderVisible: false,
 
-                borderVisible: false,
+                    wickUpColor: "#22c55e",
 
-                wickUpColor: "#22c55e",
-
-                wickDownColor: "#ef4444"
-            });
+                    wickDownColor: "#ef4444"
+                }
+            );
 
         chartRef.current = chart;
 
@@ -90,6 +91,9 @@ function CandlestickChart({ chartData }) {
             candleSeries;
 
         const handleResize = () => {
+
+            if (!chartContainerRef.current)
+                return;
 
             chart.applyOptions({
                 width:
@@ -119,6 +123,7 @@ function CandlestickChart({ chartData }) {
 
         if (
             !candleSeriesRef.current ||
+            !chartData ||
             !chartData.length
         ) return;
 
@@ -131,16 +136,16 @@ function CandlestickChart({ chartData }) {
                         ) + index,
 
                     open:
-                        candle.open,
+                        Number(candle.open),
 
                     high:
-                        candle.high,
+                        Number(candle.high),
 
                     low:
-                        candle.low,
+                        Number(candle.low),
 
                     close:
-                        candle.close
+                        Number(candle.close)
                 })
             );
 
@@ -181,8 +186,6 @@ function CandlestickChart({ chartData }) {
                     </p>
 
                 </div>
-
-                {/* TIMEFRAMES */}
 
                 <div className="
                     flex
