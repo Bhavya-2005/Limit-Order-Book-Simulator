@@ -25,7 +25,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# =========================
 # GLOBAL STATE
+# =========================
 
 order_book = OrderBook()
 
@@ -46,7 +48,9 @@ cash_balance = 100000
 realized_pnl = 0
 
 
+# =========================
 # BROADCAST ENGINE
+# =========================
 
 async def broadcast_orderbook():
 
@@ -136,7 +140,9 @@ async def broadcast_orderbook():
             clients.remove(client)
 
 
-# STARTUP
+# =========================
+# STARTUP EVENT
+# =========================
 
 @app.on_event("startup")
 async def startup_event():
@@ -156,7 +162,9 @@ async def startup_event():
     )
 
 
+# =========================
 # ROOT
+# =========================
 
 @app.get("/")
 def home():
@@ -168,7 +176,9 @@ def home():
     }
 
 
+# =========================
 # WEBSOCKET
+# =========================
 
 @app.websocket("/ws")
 async def websocket_endpoint(
@@ -194,7 +204,9 @@ async def websocket_endpoint(
             )
 
 
+# =========================
 # GENERIC ORDER CREATION
+# =========================
 
 async def create_order(
 
@@ -254,7 +266,7 @@ async def create_order(
                     best_bid.price
                 )
 
-    # ADD TO ORDER BOOK
+    # ADD TO BOOK
 
     order_book.add_order(order)
 
@@ -285,7 +297,9 @@ async def create_order(
     }
 
 
+# =========================
 # LIMIT BUY
+# =========================
 
 @app.get("/add_buy_order")
 async def add_buy_order(
@@ -305,7 +319,9 @@ async def add_buy_order(
     )
 
 
+# =========================
 # LIMIT SELL
+# =========================
 
 @app.get("/add_sell_order")
 async def add_sell_order(
@@ -325,7 +341,9 @@ async def add_sell_order(
     )
 
 
+# =========================
 # MARKET BUY
+# =========================
 
 @app.get("/market_buy")
 async def market_buy(
@@ -342,7 +360,9 @@ async def market_buy(
     )
 
 
+# =========================
 # MARKET SELL
+# =========================
 
 @app.get("/market_sell")
 async def market_sell(
@@ -359,7 +379,9 @@ async def market_sell(
     )
 
 
+# =========================
 # CANCEL ORDER
+# =========================
 
 @app.get("/cancel_order")
 async def cancel_order(
@@ -379,7 +401,72 @@ async def cancel_order(
     }
 
 
+# =========================
+# MODIFY ORDER
+# =========================
+
+@app.get("/modify_order")
+async def modify_order(
+
+    order_id: int,
+
+    new_price: float = None,
+
+    new_quantity: int = None
+):
+
+    modified_order = (
+
+        order_book.modify_order(
+
+            order_id=order_id,
+
+            new_price=new_price,
+
+            new_quantity=new_quantity
+        )
+    )
+
+    # ORDER NOT FOUND
+
+    if not modified_order:
+
+        return {
+
+            "status":
+                "Order not found"
+        }
+
+    # RE-MATCH
+
+    trades = await match_orders(
+        order_book
+    )
+
+    trade_history.extend(
+        trades
+    )
+
+    # BROADCAST
+
+    await broadcast_orderbook()
+
+    return {
+
+        "status":
+            f"Order {order_id} modified",
+
+        "modified_order":
+            modified_order.__dict__,
+
+        "trades":
+            trades
+    }
+
+
+# =========================
 # GET ORDERBOOK
+# =========================
 
 @app.get("/orderbook")
 def get_orderbook():
