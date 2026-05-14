@@ -1,139 +1,204 @@
 import React from "react";
+import {
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer
+} from "recharts";
 
 function DepthChart({
     bids,
     asks
 }) {
 
-    const maxBidQty =
-        Math.max(
-            ...bids.map(
-                bid => bid.quantity
-            ),
-            1
-        );
+    const bidData =
+        bids.map((bid) => ({
+            price: bid.price,
+            bidLiquidity: bid.quantity,
+            askLiquidity: 0
+        }));
 
-    const maxAskQty =
-        Math.max(
-            ...asks.map(
-                ask => ask.quantity
-            ),
-            1
-        );
+    const askData =
+        asks.map((ask) => ({
+            price: ask.price,
+            bidLiquidity: 0,
+            askLiquidity: ask.quantity
+        }));
+
+    const combinedData =
+        [...bidData, ...askData]
+            .sort((a, b) =>
+                a.price - b.price
+            );
 
     return (
 
-        <div>
+        <div className="w-full">
 
-            <h2 className="text-2xl font-bold mb-6 text-cyan-400">
-                Market Depth
-            </h2>
+            {/* HEADER */}
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="
+                flex
+                items-center
+                justify-between
+                mb-6
+            ">
 
-                {/* BIDS */}
                 <div>
 
-                    <h3 className="text-green-400 text-xl mb-4">
-                        BID DEPTH
-                    </h3>
+                    <h2 className="
+                        text-2xl
+                        font-bold
+                        text-cyan-400
+                    ">
+                        Liquidity Heatmap
+                    </h2>
 
-                    <div className="space-y-3">
-
-                        {
-                            bids.map((bid, index) => (
-
-                                <div key={index}>
-
-                                    <div className="flex justify-between mb-1">
-
-                                        <span>
-                                            {bid.price}
-                                        </span>
-
-                                        <span>
-                                            {bid.quantity}
-                                        </span>
-
-                                    </div>
-
-                                    <div className="w-full bg-slate-800 rounded-lg h-4">
-
-                                        <div
-                                            className="bg-green-500 h-4 rounded-lg"
-                                            style={{
-                                                width: `${
-                                                    (
-                                                        bid.quantity
-                                                        /
-                                                        maxBidQty
-                                                    ) * 100
-                                                }%`
-                                            }}
-                                        />
-
-                                    </div>
-
-                                </div>
-
-                            ))
-                        }
-
-                    </div>
+                    <p className="
+                        text-slate-400
+                        text-sm
+                    ">
+                        Real-Time Market Depth Visualization
+                    </p>
 
                 </div>
 
-                {/* ASKS */}
-                <div>
-
-                    <h3 className="text-red-400 text-xl mb-4">
-                        ASK DEPTH
-                    </h3>
-
-                    <div className="space-y-3">
-
-                        {
-                            asks.map((ask, index) => (
-
-                                <div key={index}>
-
-                                    <div className="flex justify-between mb-1">
-
-                                        <span>
-                                            {ask.price}
-                                        </span>
-
-                                        <span>
-                                            {ask.quantity}
-                                        </span>
-
-                                    </div>
-
-                                    <div className="w-full bg-slate-800 rounded-lg h-4">
-
-                                        <div
-                                            className="bg-red-500 h-4 rounded-lg"
-                                            style={{
-                                                width: `${
-                                                    (
-                                                        ask.quantity
-                                                        /
-                                                        maxAskQty
-                                                    ) * 100
-                                                }%`
-                                            }}
-                                        />
-
-                                    </div>
-
-                                </div>
-
-                            ))
-                        }
-
-                    </div>
-
+                <div className="
+                    text-green-400
+                    text-sm
+                    font-semibold
+                    animate-pulse
+                ">
+                    ● LIVE DEPTH
                 </div>
+
+            </div>
+
+            {/* CHART */}
+
+            <div className="
+                h-[420px]
+                rounded-2xl
+                overflow-hidden
+                bg-slate-950/40
+                border
+                border-cyan-500/10
+                p-4
+            ">
+
+                <ResponsiveContainer
+                    width="100%"
+                    height="100%"
+                >
+
+                    <AreaChart
+                        data={combinedData}
+                    >
+
+                        <defs>
+
+                            {/* GREEN */}
+
+                            <linearGradient
+                                id="bidGradient"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                            >
+
+                                <stop
+                                    offset="5%"
+                                    stopColor="#22c55e"
+                                    stopOpacity={0.8}
+                                />
+
+                                <stop
+                                    offset="95%"
+                                    stopColor="#22c55e"
+                                    stopOpacity={0}
+                                />
+
+                            </linearGradient>
+
+                            {/* RED */}
+
+                            <linearGradient
+                                id="askGradient"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                            >
+
+                                <stop
+                                    offset="5%"
+                                    stopColor="#ef4444"
+                                    stopOpacity={0.8}
+                                />
+
+                                <stop
+                                    offset="95%"
+                                    stopColor="#ef4444"
+                                    stopOpacity={0}
+                                />
+
+                            </linearGradient>
+
+                        </defs>
+
+                        <XAxis
+                            dataKey="price"
+                            stroke="#64748b"
+                        />
+
+                        <YAxis
+                            stroke="#64748b"
+                        />
+
+                        <Tooltip
+                            contentStyle={{
+                                background:
+                                    "#020617",
+
+                                border:
+                                    "1px solid rgba(255,255,255,0.1)",
+
+                                borderRadius:
+                                    "12px",
+
+                                color:
+                                    "#fff"
+                            }}
+                        />
+
+                        {/* BIDS */}
+
+                        <Area
+                            type="monotone"
+                            dataKey="bidLiquidity"
+                            stroke="#22c55e"
+                            fillOpacity={1}
+                            fill="url(#bidGradient)"
+                            strokeWidth={3}
+                        />
+
+                        {/* ASKS */}
+
+                        <Area
+                            type="monotone"
+                            dataKey="askLiquidity"
+                            stroke="#ef4444"
+                            fillOpacity={1}
+                            fill="url(#askGradient)"
+                            strokeWidth={3}
+                        />
+
+                    </AreaChart>
+
+                </ResponsiveContainer>
 
             </div>
 
