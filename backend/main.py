@@ -9,6 +9,7 @@ from models import Order
 from orderbook import OrderBook
 from matching_engine import match_orders
 from market_maker import MarketMaker
+from market_simulator import market_simulator
 
 from redis_client import (
     store_orderbook
@@ -25,6 +26,7 @@ app.add_middleware(
 )
 
 order_book = OrderBook()
+
 market_maker = MarketMaker()
 
 clients = []
@@ -36,7 +38,9 @@ market_price = 100
 current_order_id = 1
 
 inventory_position = 0
+
 cash_balance = 100000
+
 realized_pnl = 0
 
 
@@ -91,66 +95,55 @@ async def broadcast_orderbook():
         }
     }
 
-    # Store in Redis
-    store_orderbook(data)
+    # Optional Redis storage
+    try:
+
+        store_orderbook(data)
+
+    except Exception as e:
+
+        print(
+            f"Redis disabled: {e}"
+        )
+
+    disconnected_clients = []
 
     for client in clients:
 
-        await client.send_text(
-            json.dumps(data)
-        )
+        try:
 
-
-async def automated_market_maker():
-
-    global market_price
-    global current_order_id
-    global inventory_position
-    global cash_balance
-
-    while True:
-
-        market_price += random.randint(-1, 1)
-
-        orders = market_maker.generate_orders(
-            market_price
-        )
-
-        for order in orders:
-
-            order.id = current_order_id
-            current_order_id += 1
-
-            order_book.add_order(order)
-
-        trades = await match_orders(
-            order_book
-        )
-
-        for trade in trades:
-
-            inventory_position += (
-                random.choice([-1, 1])
-                * trade["quantity"]
+            await client.send_text(
+                json.dumps(data)
             )
 
-            cash_balance -= (
-                trade["price"]
-                * trade["quantity"]
+        except:
+
+            disconnected_clients.append(
+                client
             )
 
-        trade_history.extend(trades)
+    for client in disconnected_clients:
 
-        await broadcast_orderbook()
+        if client in clients:
 
-        await asyncio.sleep(3)
+            clients.remove(client)
 
 
 @app.on_event("startup")
 async def startup_event():
 
     asyncio.create_task(
-        automated_market_maker()
+
+        market_simulator(
+
+            order_book,
+
+            market_maker,
+
+            trade_history,
+
+            broadcast_orderbook
+        )
     )
 
 
@@ -158,6 +151,7 @@ async def startup_event():
 def home():
 
     return {
+
         "message":
             "LOB Simulator Running"
     }
@@ -175,10 +169,16 @@ async def websocket_endpoint(
     try:
 
         while True:
-            await websocket.receive_text()
+
+            await asyncio.sleep(1)
 
     except:
-        clients.remove(websocket)
+
+        if websocket in clients:
+
+            clients.remove(
+                websocket
+            )
 
 
 @app.get("/add_buy_order")
@@ -208,7 +208,9 @@ async def add_buy_order(
         order_book
     )
 
-    trade_history.extend(trades)
+    trade_history.extend(
+        trades
+    )
 
     await broadcast_orderbook()
 
@@ -252,7 +254,9 @@ async def add_sell_order(
         order_book
     )
 
-    trade_history.extend(trades)
+    trade_history.extend(
+        trades
+    )
 
     await broadcast_orderbook()
 
