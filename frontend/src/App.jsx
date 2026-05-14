@@ -11,6 +11,7 @@ import CandlestickChart from "./components/CandlestickChart";
 import RiskPanel from "./components/RiskPanel";
 import ExecutionPanel from "./components/ExecutionPanel";
 import TickerBar from "./components/TickerBar";
+import SystemMetrics from "./components/SystemMetrics";
 
 function App() {
 
@@ -334,6 +335,10 @@ function App() {
             {/* TICKER BAR */}
 
             <TickerBar />
+
+            {/* SYSTEM METRICS */}
+
+            <SystemMetrics />
 
             {/* MAIN GRID */}
 
