@@ -58,7 +58,7 @@ Frontend -> FastAPI -> Matching Engine -> Order Book -> Trade Execution
 ### Clone Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/Limit-Order-Book-Simulator.git
+git clone https://github.com/Bhavya-2005/Limit-Order-Book-Simulator.git
 ```
 
 ---
