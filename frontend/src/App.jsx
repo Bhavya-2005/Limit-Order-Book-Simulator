@@ -1,9 +1,6 @@
-import React, {
-    useEffect,
-    useState
-} from "react";
-
+import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { motion } from "framer-motion";
 
 import OrderBook from "./components/OrderBook";
 import TradePanel from "./components/TradePanel";
@@ -15,7 +12,6 @@ import RiskPanel from "./components/RiskPanel";
 import ExecutionPanel from "./components/ExecutionPanel";
 
 function App() {
-
     const [bids, setBids] = useState([]);
     const [asks, setAsks] = useState([]);
     const [trades, setTrades] = useState([]);
@@ -33,9 +29,7 @@ function App() {
         "https://lob-backend.onrender.com";
 
     const fetchOrderBook = async () => {
-
         try {
-
             const response =
                 await axios.get(
                     `${BACKEND_URL}/orderbook`
@@ -46,7 +40,6 @@ function App() {
             setTrades(response.data.trades || []);
 
         } catch (error) {
-
             console.error(
                 "Error fetching orderbook:",
                 error
@@ -63,10 +56,7 @@ function App() {
         );
 
         socket.onopen = () => {
-
-            console.log(
-                "WebSocket connected"
-            );
+            console.log("WebSocket connected");
         };
 
         socket.onmessage = (event) => {
@@ -77,9 +67,7 @@ function App() {
                     JSON.parse(event.data);
 
                 setBids(data.bids || []);
-
                 setAsks(data.asks || []);
-
                 setTrades(data.trades || []);
 
                 setRisk(data.risk || {
@@ -103,9 +91,7 @@ function App() {
                     setChartData(prev => {
 
                         const lastCandle =
-                            prev[
-                                prev.length - 1
-                            ];
+                            prev[prev.length - 1];
 
                         if (!lastCandle) {
 
@@ -183,7 +169,6 @@ function App() {
         };
 
         socket.onerror = (error) => {
-
             console.error(
                 "WebSocket error:",
                 error
@@ -191,7 +176,6 @@ function App() {
         };
 
         socket.onclose = () => {
-
             console.log(
                 "WebSocket disconnected"
             );
@@ -203,49 +187,238 @@ function App() {
 
     return (
 
-        <div className="min-h-screen p-6 bg-slate-950 text-white">
+        <div className="min-h-screen p-5 text-white">
 
-            <h1 className="text-4xl font-bold text-center mb-8 text-cyan-400">
-                Limit Order Book Simulator
-            </h1>
+            {/* HEADER */}
 
-            <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="
+                    flex
+                    flex-col
+                    lg:flex-row
+                    items-start
+                    lg:items-center
+                    justify-between
+                    gap-6
+                    mb-6
+                    bg-slate-900/70
+                    backdrop-blur-xl
+                    border
+                    border-cyan-500/10
+                    rounded-2xl
+                    px-6
+                    py-5
+                    shadow-[0_0_30px_rgba(0,255,255,0.05)]
+                "
+            >
 
-                <div className="bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                <div>
+                    <h1 className="text-4xl font-bold text-cyan-400">
+                        LOB/USD
+                    </h1>
+
+                    <p className="text-slate-400 mt-1">
+                        Professional Market Simulator
+                    </p>
+                </div>
+
+                <div className="flex flex-wrap gap-6">
+
+                    <div>
+                        <p className="text-slate-400 text-sm">
+                            Market Price
+                        </p>
+
+                        <p className="text-green-400 text-2xl font-bold">
+                            107.28
+                        </p>
+                    </div>
+
+                    <div>
+                        <p className="text-slate-400 text-sm">
+                            Spread
+                        </p>
+
+                        <p className="text-cyan-400 text-2xl font-bold">
+                            0.02
+                        </p>
+                    </div>
+
+                    <div>
+                        <p className="text-slate-400 text-sm">
+                            Volume
+                        </p>
+
+                        <p className="text-yellow-400 text-2xl font-bold">
+                            14,281
+                        </p>
+                    </div>
+
+                    <div>
+                        <p className="text-slate-400 text-sm">
+                            WebSocket
+                        </p>
+
+                        <p className="text-green-400 font-bold">
+                            ● Connected
+                        </p>
+                    </div>
+
+                </div>
+
+            </motion.div>
+
+            {/* MAIN GRID */}
+
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+
+                {/* LEFT PANEL */}
+
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="
+                        xl:col-span-2
+                        bg-slate-900/70
+                        backdrop-blur-xl
+                        p-5
+                        rounded-2xl
+                        border
+                        border-cyan-500/10
+                        shadow-[0_0_30px_rgba(0,255,255,0.05)]
+                    "
+                >
                     <TradePanel refreshOrderBook={fetchOrderBook} />
-                </div>
+                </motion.div>
 
-                <div className="bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                {/* ORDER BOOK */}
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="
+                        xl:col-span-3
+                        bg-slate-900/70
+                        backdrop-blur-xl
+                        p-5
+                        rounded-2xl
+                        border
+                        border-cyan-500/10
+                        shadow-[0_0_30px_rgba(0,255,255,0.05)]
+                    "
+                >
                     <OrderBook bids={bids} asks={asks} />
+                </motion.div>
+
+                {/* CHART */}
+
+                <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="
+                        xl:col-span-7
+                        bg-slate-900/70
+                        backdrop-blur-xl
+                        p-5
+                        rounded-2xl
+                        border
+                        border-cyan-500/10
+                        shadow-[0_0_30px_rgba(0,255,255,0.05)]
+                    "
+                >
+
+                    <div className="h-[500px]">
+                        <CandlestickChart chartData={chartData} />
+                    </div>
+
+                </motion.div>
+
+                {/* LOWER PANELS */}
+
+                <div className="
+                    xl:col-span-12
+                    grid
+                    grid-cols-1
+                    md:grid-cols-2
+                    xl:grid-cols-4
+                    gap-5
+                ">
+
+                    <div className="
+                        bg-slate-900/70
+                        backdrop-blur-xl
+                        p-5
+                        rounded-2xl
+                        border
+                        border-cyan-500/10
+                    ">
+                        <Trades trades={trades} />
+                    </div>
+
+                    <div className="
+                        bg-slate-900/70
+                        backdrop-blur-xl
+                        p-5
+                        rounded-2xl
+                        border
+                        border-cyan-500/10
+                    ">
+                        <StatsPanel
+                            bids={bids}
+                            asks={asks}
+                            trades={trades}
+                        />
+                    </div>
+
+                    <div className="
+                        bg-slate-900/70
+                        backdrop-blur-xl
+                        p-5
+                        rounded-2xl
+                        border
+                        border-cyan-500/10
+                    ">
+                        <RiskPanel risk={risk} />
+                    </div>
+
+                    <div className="
+                        bg-slate-900/70
+                        backdrop-blur-xl
+                        p-5
+                        rounded-2xl
+                        border
+                        border-cyan-500/10
+                    ">
+                        <ExecutionPanel trades={trades} />
+                    </div>
+
                 </div>
 
-                <div className="bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                    <Trades trades={trades} />
-                </div>
+                {/* DEPTH CHART */}
 
-                <div className="bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                    <StatsPanel
-                        bids={bids}
-                        asks={asks}
-                        trades={trades}
-                    />
-                </div>
-
-                <div className="bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                    <RiskPanel risk={risk} />
-                </div>
-
-                <div className="bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                    <ExecutionPanel trades={trades} />
-                </div>
-
-                <div className="bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-xl lg:col-span-6">
-                    <CandlestickChart chartData={chartData} />
-                </div>
-
-                <div className="bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-xl lg:col-span-6">
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6 }}
+                    className="
+                        xl:col-span-12
+                        bg-slate-900/70
+                        backdrop-blur-xl
+                        p-5
+                        rounded-2xl
+                        border
+                        border-cyan-500/10
+                        shadow-[0_0_30px_rgba(0,255,255,0.05)]
+                    "
+                >
                     <DepthChart bids={bids} asks={asks} />
-                </div>
+                </motion.div>
 
             </div>
 

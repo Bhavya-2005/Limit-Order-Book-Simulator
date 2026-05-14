@@ -8,8 +8,41 @@
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
-    background: #020617;
+
+    background:
+        radial-gradient(
+            circle at top,
+            #0f172a,
+            #020617 60%
+        );
+
     color: white;
-    font-family: Arial, sans-serif;
+
+    font-family: 'Inter', sans-serif;
+
+    overflow-x: hidden;
+}
+
+/* SCROLLBAR */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #0ea5e9;
+    border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #38bdf8;
 }
