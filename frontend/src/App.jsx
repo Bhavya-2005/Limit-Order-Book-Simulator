@@ -38,7 +38,7 @@ function App() {
 
         const response =
             await axios.get(
-                "http://127.0.0.1:8000/orderbook"
+                "https://lob-backend.onrender.com"
             );
 
         setBids(response.data.bids);
@@ -51,7 +51,7 @@ function App() {
         fetchOrderBook();
 
         const socket = new WebSocket(
-            "ws://127.0.0.1:8000/ws"
+            "wss://lob-backend.onrender.com/ws"
         );
 
         socket.onmessage = (event) => {
