@@ -1,4 +1,10 @@
 import React from "react";
+import {
+    TrendingUp,
+    Activity,
+    BarChart3,
+    Waves
+} from "lucide-react";
 
 function StatsPanel({
     bids,
@@ -6,100 +12,187 @@ function StatsPanel({
     trades
 }) {
 
-    const bestBid =
-        bids.length > 0
-            ? bids[0].price
-            : 0;
+    const totalBidLiquidity =
+        bids.reduce(
+            (sum, bid) =>
+                sum + (bid.quantity || 0),
+            0
+        );
 
-    const bestAsk =
-        asks.length > 0
-            ? asks[0].price
-            : 0;
+    const totalAskLiquidity =
+        asks.reduce(
+            (sum, ask) =>
+                sum + (ask.quantity || 0),
+            0
+        );
 
     const spread =
-        bestAsk && bestBid
-            ? (bestAsk - bestBid).toFixed(2)
-            : 0;
+        bids.length && asks.length
+            ? (
+                asks[0].price -
+                bids[0].price
+            ).toFixed(2)
+            : "0.00";
 
     const volume =
         trades.reduce(
             (sum, trade) =>
-                sum + trade.quantity,
+                sum + (trade.quantity || 0),
             0
         );
 
-    const latestPrice =
-        trades.length > 0
-            ? trades[
-                trades.length - 1
-            ].price
-            : 0;
+    const pressure =
+        totalBidLiquidity >
+        totalAskLiquidity
+            ? "Bullish"
+            : "Bearish";
 
-    const pnl =
-        trades.reduce(
-            (sum, trade) =>
-                sum +
-                (trade.price * trade.quantity),
-            0
-        ).toFixed(2);
+    const stats = [
+
+        {
+            title: "Spread",
+            value: spread,
+            icon: <TrendingUp size={22} />,
+            color: "text-cyan-400",
+            bg: "bg-cyan-500/10"
+        },
+
+        {
+            title: "Volume",
+            value: volume,
+            icon: <BarChart3 size={22} />,
+            color: "text-yellow-400",
+            bg: "bg-yellow-500/10"
+        },
+
+        {
+            title: "Bid Liquidity",
+            value: totalBidLiquidity,
+            icon: <Activity size={22} />,
+            color: "text-green-400",
+            bg: "bg-green-500/10"
+        },
+
+        {
+            title: "Market Pressure",
+            value: pressure,
+            icon: <Waves size={22} />,
+            color:
+                pressure === "Bullish"
+                    ? "text-green-400"
+                    : "text-red-400",
+
+            bg:
+                pressure === "Bullish"
+                    ? "bg-green-500/10"
+                    : "bg-red-500/10"
+        }
+    ];
 
     return (
 
-        <div>
+        <div className="h-full flex flex-col">
 
-            <h2 className="text-2xl font-bold mb-6 text-cyan-400">
-                Market Stats
-            </h2>
+            {/* HEADER */}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="mb-5">
 
-                <div className="bg-slate-800 p-4 rounded-xl">
+                <h2 className="
+                    text-2xl
+                    font-bold
+                    text-cyan-400
+                ">
+                    Market Metrics
+                </h2>
 
-                    <p className="text-gray-400">
-                        Market Price
-                    </p>
+                <p className="
+                    text-slate-400
+                    text-sm
+                ">
+                    Real-Time Exchange Analytics
+                </p>
 
-                    <h3 className="text-2xl font-bold text-green-400">
-                        {latestPrice}
-                    </h3>
+            </div>
 
-                </div>
+            {/* STATS */}
 
-                <div className="bg-slate-800 p-4 rounded-xl">
+            <div className="
+                grid
+                grid-cols-1
+                gap-4
+            ">
 
-                    <p className="text-gray-400">
-                        Spread
-                    </p>
+                {stats.map(
+                    (stat, index) => (
 
-                    <h3 className="text-2xl font-bold text-yellow-400">
-                        {spread}
-                    </h3>
+                        <div
+                            key={index}
+                            className={`
+                                relative
+                                overflow-hidden
+                                rounded-2xl
+                                border
+                                border-white/5
+                                p-4
+                                ${stat.bg}
+                                backdrop-blur-xl
+                                hover:scale-[1.02]
+                                transition-all
+                                duration-300
+                            `}
+                        >
 
-                </div>
+                            {/* GLOW */}
 
-                <div className="bg-slate-800 p-4 rounded-xl">
+                            <div className="
+                                absolute
+                                inset-0
+                                bg-gradient-to-r
+                                from-white/[0.03]
+                                to-transparent
+                            " />
 
-                    <p className="text-gray-400">
-                        Volume
-                    </p>
+                            <div className="
+                                relative
+                                flex
+                                items-center
+                                justify-between
+                            ">
 
-                    <h3 className="text-2xl font-bold text-cyan-400">
-                        {volume}
-                    </h3>
+                                <div>
 
-                </div>
+                                    <p className="
+                                        text-slate-400
+                                        text-sm
+                                        mb-1
+                                    ">
+                                        {stat.title}
+                                    </p>
 
-                <div className="bg-slate-800 p-4 rounded-xl">
+                                    <h3 className={`
+                                        text-2xl
+                                        font-bold
+                                        ${stat.color}
+                                    `}>
+                                        {stat.value}
+                                    </h3>
 
-                    <p className="text-gray-400">
-                        PnL
-                    </p>
+                                </div>
 
-                    <h3 className="text-2xl font-bold text-purple-400">
-                        {pnl}
-                    </h3>
+                                <div className={`
+                                    p-3
+                                    rounded-xl
+                                    ${stat.bg}
+                                    ${stat.color}
+                                `}>
+                                    {stat.icon}
+                                </div>
 
-                </div>
+                            </div>
+
+                        </div>
+                    )
+                )}
 
             </div>
 
